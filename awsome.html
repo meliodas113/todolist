@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Awsome</title>
+	<link href = "index.css" rel= "stylesheet"  type= "text/css">
+    <meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0/jquery.min.js" type="text/javascript"></script>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" type="text/javascript"></script>
+
+	<script src="https://cdn.awesomefunctions.com/awesome-functions.min.js" type="text/javascript"></script>
+
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<script>
+$(document).ready(function($)
+{
+	
+	$('.Screen').hide();
+
+	
+	var LocalstorageName = 'TaskManager'; 
+
+
+ 
+ 	$(document).on('click', '.BTN_Add_New', function(event) 
+ 	{
+ 		
+ 		var GetTemplateData = $('.Template_New_Task').html();
+
+ 		$('.Screen_Data').html(GetTemplateData);
+ 		$('.Screen_Data').find('.btn_Task').html('Save').addClass('BTN_Save_New_Task')
+ 		$('.Screen_Data').show();
+ 	});
+
+ 	
+ 	$('.Screen_Data').on('click', '.BTN_Save_New_Task', function(event) 
+ 	{	 
+ 		
+		bs.ClearError();
+
+ 		
+ 		var TaskName = $('.Screen_Data').find('.TaskName');
+		var TaskDate = $('.Screen_Data').find('.TaskDate');
+ 		var TaskDesc = $('.Screen_Data').find('.TaskDesc');
+
+ 		if(frm.IsEmpty(TaskName.val() ))
+		{
+			
+			bs.ShowError ("Please enter Task Name",TaskName)
+		}
+		else if(frm.IsEmpty(TaskDate.val()))
+		{
+			
+			bs.ShowError ("Please enter Task Completion Date",TaskDate)
+		}
+		else if(frm.IsEmpty(TaskDesc.val()))
+		{
+			
+			bs.ShowError ("Please enter Task description",TaskDesc)
+		}
+		else
+		{			 
+			var AddTask = 
+			{ 
+				'rec_id':js.MD5('',6),
+				'TaskName' : TaskName.val(), 
+				'TaskDate' : TaskDate.val(), 
+				'TaskDesc' : TaskDesc.val(), 
+			};
+
+			ls.AddArr(LocalstorageName,AddTask);
+			
+			var d = bs.AlertMsg("Successfully add your new task", "success");
+			$('.Screen_Data').html(d);
+
+			
+			 
+			$(".BTN_View").click();
+		}
+				
+ 
+ 	});
+ 	
+
+
+
+ 	
+	$(document).on('click', '.BTN_View', function(event) 
+ 	{
+ 		
+ 		var AllTasks = ls.GetAllArr(LocalstorageName);
+ 		 
+
+ 		if(js.Size(AllTasks) < 1 || js.Size(AllTasks)==0)
+ 		{ 
+ 			
+			$('.Screen_Data').html(d).show();
+ 			return false;
+ 		}
+
+ 		
+
+ 		var strTableData = '';
+ 		strTableData +='<table class="table ">';
+ 		strTableData += '<thead>';
+ 		
+ 		strTableData += '<th>Line Num</th>';
+ 		strTableData += '<th>Task Name</th>';
+ 		strTableData += '<th>Task Date</th>';
+ 		strTableData += '<th>Task Desc</th>';
+ 		strTableData += '<th>Options</th>';
+ 			
+ 		strTableData += '</thead>';
+
+
+ 		strTableData += '<tbody>'
+ 		for (var i = 0; i < AllTasks.length; i++) 
+ 		{
+ 			var val = AllTasks[i];
+ 			var line_num = i+ 1;
+ 			
+			strTableData += '<tr>';
+		 	strTableData += '<td>'+line_num +'</td>';
+			strTableData += '<td>'+val.TaskName+'</td>';
+			strTableData += '<td>'+val.TaskDate+'</td>';
+			strTableData += '<td>'+val.TaskDesc+'<td>'; 
+
+			
+			
+			var Delete = '<a href="#" class="BTN_Delete_Entry" rec_id="'+val.rec_id+'" task_name="'+val.TaskName+'">Delete</a>';
+
+			strTableData += '<td>'+Delete+'<td>'; 
+			strTableData += '</tr>'; 
+ 			 
+ 		};
+ 		strTableData += '<tbody>'
+ 		strTableData += '</table>';
+
+ 		$('.Screen_Data').html(strTableData).show();
+
+ 	});
+		
+
+	
+    $(document).on('click', '.BTN_Delete_Entry', function(event) 
+ 	{
+ 		var rec_id  = $(this).attr('rec_id');
+ 		var task_name = $(this).attr('task_name');
+
+ 		var ObjArrOptions = 
+		{
+		  text: "Are you sure you want to delete Task Name (<b>"+task_name+"<b>) ?",
+		  title: "Confirmation required",
+		  confirm: function(button) 
+		  {
+			var WhereValueEquals = {rec_id:rec_id}
+
+			var data = ls.DeleteArr (LocalstorageName,WhereValueEquals)
+
+						 
+			$(".BTN_View").click();
+
+		  },
+		  cancel: function(button) 
+		  {
+		   
+		  },
+		  confirmButton: "Yes I am",
+		  cancelButton: "No",                       
+		  confirmButtonClass: "btn-primary",   
+		  cancelButtonClass: "btn-info",    
+		  dialogClass: "modal-dialog modal-lg" 
+		}
+
+		
+		bs.confirm(ObjArrOptions);
+
+ 	});
+	
+	$(document).on('click', '.BTN_Delete_All', function(event)  	
+ 	{
+ 		var AllTasks = _.sortBy(ls.GetAllArr(LocalstorageName), ['TaskDate']);
+ 		
+ 		if(js.Size(AllTasks) < 1 || js.Size(AllTasks)==0)
+ 		{ 
+ 			var d = bs.AlertMsg("Oppps...Looks like there are no tasks. <br><br> You should add a task first", "info");
+			$('.Screen_Data').html(d).show();
+ 			return false;
+ 		}
+
+
+ 		var ObjArrOptions = 
+		{
+		  text: "Are you sure you want to delete All Tasks ?",
+		  title: "Confirmation required",
+		  confirm: function(button) 
+		  {
+			ls.Delete(LocalstorageName);
+						 
+			$(".BTN_View").click();
+
+		  },
+		  cancel: function(button) 
+		  {
+		    
+		  },
+		  confirmButton: "Yes I am",
+		  cancelButton: "No",                       
+		  confirmButtonClass: "btn-primary",   
+		  cancelButtonClass: "btn-info",    
+		  dialogClass: "modal-dialog modal-lg" 
+		}
+
+		
+		bs.confirm(ObjArrOptions);
+ 		
+ 	});
+
+
+	
+
+	
+
+	var AllTasks = ls.GetAllArr(LocalstorageName);
+	
+	if(js.Size(AllTasks) >0 )
+	{ 
+		$(".BTN_View").click(); 	
+	}
+
+
+
+
+});
+</script>
+
+
+
+
+
+
+<body>
+
+
+
+<div class="text-center">
+
+    <div class="todo">To-Do List
+    </div>
+
+    <div class="boss">
+
+    <a class="BTN_Add_New">Add Task</a>
+	
+	<a class="BTN_View"> View All Tasks</a>
+
+	<a class="BTN_Delete_All"> Delete All Tasks</a>
+
+
+	</div>
+
+</div>
+
+<br><br>
+
+
+
+
+<div class=" container Screen Screen_Data  "  >  </div>
+
+
+
+
+
+<div class="Screen Template_New_Task" style="display:none;"  >
+
+	<div class="panel panel-danger  center-block" style="max-width:400px;">
+	  
+	  
+
+	  	
+		<div class="panel-body"> 
+
+			
+			<div class="input-group">
+				<span class="input-group-addon">Task Name</span>
+				<input   type="text" class="form-control TaskName"  placeholder="Type In Task Name"   >
+			</div>
+			<br><br>
+			
+			<div class="input-group">
+				<span class="input-group-addon">Task Completion Date</span>
+				<input   type="date" class="form-control TaskDate"  >
+			</div>
+			<br><br>
+			
+			<div class="input-group">
+				<span class="input-group-addon">Task description</span>
+				<textarea class="form-control TaskDesc" rows="5" placeholder="Type In Task description"></textarea>
+			</div>
+			<br><br>
+			
+
+			<div class="btn btn-primary text-center btn_Task">Save</div>
+
+		</div>
+	  
+	</div>
+</div>
+
+
+</div>
+</body>
+</html>
